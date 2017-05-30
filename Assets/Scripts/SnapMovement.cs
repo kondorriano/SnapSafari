@@ -5,54 +5,79 @@ using UnityEngine;
 public class SnapMovement : MonoBehaviour {
 
     [System.Serializable]
-    public class InputMove
+    public class InputInfo
     {
-        public float vAxis = 0;
-        public float hAxis = 0;
+        public Vector3 carMovement = Vector3.zero;
+        public float carRotation   = 0.0f;
+
+        public Vector2 camRotation = Vector2.zero;
+    }
+    
+
+    [System.Serializable]
+    public class MovementInfo
+    {
+        public float gravity = -10.0f;
+        public float speed   = 5.0f;
+
+        public Vector3 currentVelocity = Vector3.zero;
     }
 
     [System.Serializable]
-    public class PhysicsMove
+    public class RotationInfo
     {
-        public float gravity = -10f;
-        public Vector3 velocity = Vector3.zero;
-        public float speed = 5f;
+        public float rotationSpeed   = 500.0f;
+
+        public float currentRotation = 0.0f;
     }
 
+    [System.Serializable]
+    public class CamInfo
+    {
+        public float rotationSpeed = 10.0f;
 
-    public InputMove myInput;
-    public PhysicsMove myPhysics;
+        public float verticalAngleLock   = Mathf.PI / 3;
+        public float horizontalAngleLock = Mathf.PI / 2;
 
-    CharacterController myChar;
+        public Vector2 currentRotation = Vector2.zero;
+    }
+
+    public InputInfo mInput;
+    public MovementInfo mMovement;
+    public RotationInfo mRotation;
+    public CamInfo mCam;
+
+    CharacterController mChar;
     
-
 	// Use this for initialization
 	void Start () {
-        myChar = GetComponent<CharacterController>();
-
-        
+        mChar = GetComponent<CharacterController>();        
 	}
 	
-	// Update is called once per frame
 	void Update () {
         GetInput();
 	}
 
     void FixedUpdate()
     {
-        SetMovement();
-        myChar.Move(myPhysics.velocity*Time.fixedDeltaTime);
+        mRotation.currentRotation = mInput.carRotation;
+        mChar.transform.Rotate(0.0f, mRotation.currentRotation * mRotation.rotationSpeed * Time.fixedDeltaTime, 0.0f);
+
+        Quaternion transformRotation = mChar.transform.rotation;
+        mMovement.currentVelocity = transformRotation * mInput.carMovement;
+        mChar.Move(mMovement.currentVelocity * mMovement.speed * Time.fixedDeltaTime);
+
+        mCam.currentRotation = mInput.camRotation;
     }
 
     void GetInput()
     {
-        myInput.hAxis = Input.GetAxis("Horizontal");
-        myInput.vAxis = Input.GetAxis("Vertical");
+        mInput.carMovement.x = Input.GetAxis("Horizontal");
+        mInput.carMovement.z = Input.GetAxis("Vertical");
 
-    }
-
-    void SetMovement()
-    {
-        myPhysics.velocity = new Vector3(myInput.hAxis, 0, myInput.vAxis)*myPhysics.speed + Vector3.up*myPhysics.gravity;
+        mInput.carRotation = Input.GetAxis("Mouse X");
+        
+        // TODO: CamRotation
+        // Which input (?)
     }
 }
